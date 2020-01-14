@@ -1,14 +1,12 @@
-[![Build status](https://img.shields.io/travis/pterodactyl/panel/develop.svg?style=flat-square)](https://travis-ci.org/pterodactyl/panel)
-[![StyleCI](https://styleci.io/repos/47508644/shield?branch=develop)](https://styleci.io/repos/47508644)
-[![Codecov](https://img.shields.io/codecov/c/github/pterodactyl/panel/develop.svg?style=flat-square)](https://codecov.io/gh/Pterodactyl/Panel)
-[![Discord](https://img.shields.io/discord/122900397965705216.svg?style=flat-square&label=Discord)](https://pterodactyl.io/discord)
+# Magento 2 on Ubuntu 18.04
 
-# Magento 2
+Magento is leading enterprise-class e-commerce platform built on open-source technology combining powerful features with flexibility and user-friendly interface.
 
-Pterodactyl is the open-source game server management panel built with PHP7, Nodejs, and Go. Designed with security in mind, Pterodactyl runs all game servers in isolated Docker containers while exposing a beautiful and intuitive UI to administrators and users.
-What more are you waiting for? Make game servers a first class citizen on your platform today.
+With features like Engaging Shopping Experiences, Flexible Modular Architecture and Enterprise-grade Scalability and Performance Magento is a platform of choice for most online merchants.
 
-## Support & Documentation
+In this tutorial, we will show you how to install Magento 2.3 on an Ubuntu 18.04 machine.
+
+## Install Nginx on Ubuntu 18.04
 ```bash
 git (coming)
 ```
