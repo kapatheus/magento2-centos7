@@ -12,3 +12,14 @@ Nginx pronounced “engine x” is a free, open-source, high-performance HTTP an
 git (coming)
 ```
 
+## Secure Nginx with Let's Encrypt
+```bash
+sudo apt update
+sudo apt install certbot
+```
+### Generate Strong Dh (Diffie-Hellman) Group
+Diffie–Hellman key exchange (DH) is a method of securely exchanging cryptographic keys over an unsecured communication channel. We're going to generate a new set of 2048 bit DH parameters to strengthen the security:
+```bash
+sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+```
+If you like you can change the size up to 4096 bits, but in that case, the generation may take more than 30 minutes depending on the system entropy.
