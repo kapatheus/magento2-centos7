@@ -99,3 +99,61 @@ Diffie–Hellman key exchange (DH) is a method of securely exchanging cryptograp
 sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
 ```
 If you like you can change the size up to 4096 bits, but in that case, the generation may take more than 30 minutes depending on the system entropy.
+
+### Configuring Nginx
+```bash
+sudo nano /etc/nginx/sites-available/example.com
+```
+```bash
+upstream fastcgi_backend {
+  server   unix:/var/run/php/php7.2-fpm-magento.sock;
+}
+
+server {
+    listen 80;
+    server_name example.com www.example.com;
+
+    include snippets/letsencrypt.conf;
+    return 301 https://example.com$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name www.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/example.com/chain.pem;
+    include snippets/ssl.conf;
+    include snippets/letsencrypt.conf;
+
+    return 301 https://example.com$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name example.com;
+
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/example.com/chain.pem;
+    include snippets/ssl.conf;
+    include snippets/letsencrypt.conf;
+
+    set $MAGE_ROOT /opt/magento/public_html;
+    set $MAGE_MODE developer; # or production
+
+    access_log /var/log/nginx/example.com-access.log;
+    error_log /var/log/nginx/example.com-error.log;
+
+    include /opt/magento/public_html/nginx.conf.sample;
+}
+```
+```bash
+sudo nginx -t
+```
+```bash
+sudo systemctl restart nginx
+```
+### Verifying the Installation
+Open your browser, type your domain and assuming the installation is successful!
