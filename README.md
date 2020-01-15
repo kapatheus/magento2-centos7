@@ -62,7 +62,7 @@ Nginx Full (v6)            ALLOW       Anywhere (v6)
 You can test your new Nginx installation open http://YOUR_IP in your browser of choice, and you will be presented with the default Nginx landing page as shown on the image below:
 <Coming!>
 
-### Set Up Nginx Server Blocks
+## Set Up Nginx Server Blocks
 Nginx Server Blocks allows you to run more than one website on a single machine. With Server Blocks, you can specify the site document root (the directory which contains the website files), create a separate security policy for each site, use different SSL certificates for each site and much more.
 
 Let's create the root directory for our domain example.com:
@@ -141,7 +141,7 @@ sudo systemctl restart nginx
 Finally to verify the server block is working as expected open http://example.com in your browser of choice, and you will see something like this:
 <Coming!>
 
-#### Secure Nginx with Let's Encrypt
+## Secure Nginx with Let's Encrypt
 Let's Encrypt is a free and open certificate authority developed by the Internet Security Research Group (ISRG). Certificates issued by Let's Encrypt are trusted by almost all browsers today.
 
 ### Install Certbot
