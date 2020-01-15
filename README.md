@@ -32,7 +32,7 @@ sudo useradd -m -U -r -d /opt/magento magento
 ```bash
 sudo apt install php7.2-common php7.2-cli php7.2-fpm php7.2-opcache php7.2-gd php7.2-mysql php7.2-curl php7.2-intl php7.2-xsl php7.2-mbstring php7.2-zip php7.2-bcmath php7.2-soap
 ```
-### Set the required and recommended PHP options by editing the php.ini file with sed:
+#### Set the required and recommended PHP options by editing the php.ini file with sed:
 ```bash
 sudo sed -i "s/;cgi.fix_pathinfo=1*/cgi.fix_pathinfo=0/" /etc/php/7.2/fpm/php.ini
 sudo sed -i "s/memory_limit = .*/memory_limit = 1024M/" /etc/php/7.2/fpm/php.ini
