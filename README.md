@@ -13,6 +13,8 @@ sudo apt install unzip -y
 ```
 
 ## Installing Nginx
+Nginx pronounced “engine x” is a free, open-source, high-performance HTTP and reverse proxy server responsible for handling the load of some of the largest sites on the Internet. Nginx can be used as a standalone web server, and as a reverse proxy for Apache and other web servers. Compared to Apache, Nginx can handle a much large number of concurrent connections and has a smaller memory footprint per connection.
+
 Nginx packages are available in the default Ubuntu repositories. The installation is pretty straightforward.
 ```bash
 sudo apt install nginx
@@ -60,6 +62,84 @@ Nginx Full (v6)            ALLOW       Anywhere (v6)
 You can test your new Nginx installation open http://YOUR_IP in your browser of choice, and you will be presented with the default Nginx landing page as shown on the image below:
 <Coming!>
 
+### Set Up Nginx Server Blocks
+Nginx Server Blocks allows you to run more than one website on a single machine. With Server Blocks, you can specify the site document root (the directory which contains the website files), create a separate security policy for each site, use different SSL certificates for each site and much more.
+
+Let's create the root directory for our domain example.com:
+```bash
+sudo mkdir -p /var/www/example.com/public_html
+```
+For testing purposes we will create an index.html file inside the domain's document root directory.
+Open your editor and create the demo file:
+```bash
+nano /var/www/example.com/public_html/index.html
+```
+```bash
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Welcome to example.com</title>
+  </head>
+  <body>
+    <h1>Success! example.com home page!</h1>
+  </body>
+</html>
+```
+In this guide, we are running the commands as sudo user and the newly created files and directories are owned by the root user.
+
+To avoid any permission issues we can change the ownership of the domain document root directory to the Nginx user (www-data):
+```bash
+sudo chown -R www-data: /var/www/example.com
+```
+#### Create a Server Block
+By default on Ubuntu systems, Nginx server blocks configuration files are stored in /etc/nginx/sites-available directory, which are enabled through symbolic links to the /etc/nginx/sites-enabled/ directory.
+
+Create the following server block file:
+
+```bash
+/etc/nginx/sites-available/example.com
+```
+```bash
+server {
+    listen 80;
+    listen [::]:80;
+
+    root /var/www/example.com/public_html;
+
+    index index.html;
+
+    server_name example.com www.example.com;
+
+    access_log /var/log/nginx/example.com.access.log;
+    error_log /var/log/nginx/example.com.error.log;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+You can name the configuration file as you like but usually it is best to use the domain name.
+
+To enable the new server block file we need to create a symbolic link from the file to the sites-enabled directory, which is read by Nginx during startup:
+```bash
+sudo ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/
+Test the Nginx configuration for correct syntax:
+```
+```bash
+sudo nginx -t
+```
+If there are no errors the output will look like this:
+```bash
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+Restart the Nginx service for the changes to take effect:
+```bash
+sudo systemctl restart nginx
+```
+Finally to verify the server block is working as expected open http://example.com in your browser of choice, and you will see something like this:
+<Coming!>
 
 ### Install MariaDB, create database and user
 ```bash
