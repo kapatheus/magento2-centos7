@@ -99,7 +99,64 @@ Diffie–Hellman key exchange (DH) is a method of securely exchanging cryptograp
 sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
 ```
 If you like you can change the size up to 4096 bits, but in that case, the generation may take more than 30 minutes depending on the system entropy.
+### Obtaining a Let's Encrypt SSL certificate
+To obtain an SSL certificate for our domain we're going to use the Webroot plugin that works by creating a temporary file for validating the requested domain in the ${webroot-path}/.well-known/acme-challenge directory. The Let’s Encrypt server makes HTTP requests to the temporary file to validate that the requested domain resolves to the server where certbot runs.
 
+To make it more simple we're going to map all HTTP requests for .well-known/acme-challenge to a single directory, /var/lib/letsencrypt.
+
+The following commands will create the directory and make it writable for the Nginx server.
+```bash
+mkdir -p /var/lib/letsencrypt/.well-known
+chgrp www-data /var/lib/letsencrypt
+chmod g+s /var/lib/letsencrypt
+```
+
+To avoid duplicating code create the following two snippets which we're going to include in all our Nginx server block files.
+Open your text editor and create the first snippet, letsencrypt.conf:
+```bash
+sudo nano /etc/nginx/snippets/letsencrypt.conf
+```
+```bash
+location ^~ /.well-known/acme-challenge/ {
+  allow all;
+  root /var/lib/letsencrypt/;
+  default_type "text/plain";
+  try_files $uri =404;
+}
+```
+
+Create the second snippet ssl.conf which includes the chippers recommended by Mozilla, enables OCSP Stapling, HTTP Strict Transport Security (HSTS) and enforces few security‑focused HTTP headers.
+```bash
+sudo nano /etc/nginx/snippets/ssl.conf
+```
+```bash
+ssl_dhparam /etc/ssl/certs/dhparam.pem;
+
+ssl_session_timeout 1d;
+ssl_session_cache shared:SSL:50m;
+ssl_session_tickets off;
+
+ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+ssl_ciphers 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS';
+ssl_prefer_server_ciphers on;
+
+ssl_stapling on;
+ssl_stapling_verify on;
+resolver 8.8.8.8 8.8.4.4 valid=300s;
+resolver_timeout 30s;
+
+add_header Strict-Transport-Security "max-age=15768000; includeSubdomains; preload";
+add_header X-Frame-Options SAMEORIGIN;
+add_header X-Content-Type-Options nosniff;
+```
+
+Once the snippets are created, open the domain server block and include the letsencrypt.conf snippet as shown below:
+```bash
+sudo nano /etc/nginx/sites-available/example.com
+```
+```bash
+
+```
 ### Configuring Nginx
 ```bash
 sudo nano /etc/nginx/sites-available/example.com
