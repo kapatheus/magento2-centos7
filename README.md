@@ -314,10 +314,15 @@ sudo certbot renew --dry-run
 ```
 If there are no errors, it means that the renewal process was successful.
 
-### Install MariaDB, create database and user
+## Install MariaDB
+MariaDB is an open-source, multi-threaded relational database management system, backward compatible replacement for MySQL. It is maintained and developed by the MariaDB Foundation including some of the original developers of the MySQL.
 ```bash
 sudo apt -y install mariadb-server mariadb-client
-mysql_secure_installation (answer yes for questions)
+mysql_secure_installation
+```
+(Answer yes for all questions)
+### Creating MySQL database and user
+```bash
 sudo mysql
 create database magentodb;
 create user magento@localhost identified by 'strong_password';
