@@ -1,3 +1,4 @@
+![Image](https://github.com/kapatheus/magento2/blob/master/magento-2.jpg)
 # Magento 2
 
 Magento is leading enterprise-class e-commerce platform built on open-source technology combining powerful features with flexibility and user-friendly interface.
