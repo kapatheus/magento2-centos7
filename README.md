@@ -42,8 +42,7 @@ sudo sed -i "s/max_execution_time = .*/max_execution_time = 18000/" /etc/php/7.2
 sudo sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/7.2/fpm/php.ini
 sudo sed -i "s/;opcache.save_comments.*/opcache.save_comments = 1/" /etc/php/7.2/fpm/php.ini
 ```
-#### Next we need to create a FPM pool for the magento user.
-#### Open your text editor and create the following file:
+### Create a FPM pool for the magento user.
 ```bash
 sudo nano /etc/php/7.2/fpm/pool.d/magento.conf
 ```
