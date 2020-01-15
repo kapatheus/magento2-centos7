@@ -6,13 +6,63 @@ With features like Engaging Shopping Experiences, Flexible Modular Architecture 
 
 In this tutorial, we will show you how to install Magento 2 on an Ubuntu 18.04 VPS with MySQL, PHP-FPM 7.2, Varnish as a full page cache, Nginx as SSL termination and Redis for session storage and page caching.
 
-### Update system / install Nginx and unzip
+### Update system
 Nginx pronounced “engine x” is a free, open-source, high-performance HTTP and reverse proxy server responsible for handling the load of some of the largest sites on the Internet. Compared to Apache, Nginx can handle a much large number of concurrent connections and has a smaller memory footprint per connection.
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install nginx unzip -y
 sudo ufw allow 'Nginx Full'
 ```
+
+### Installing Nginx
+Nginx packages are available in the default Ubuntu repositories. The installation is pretty straightforward.
+```bash
+sudo apt install nginx
+```
+Once the installation is completed, Nginx service will start automatically. You can check the status of the service with the following command:
+```bash
+sudo systemctl status nginx
+```
+The output will look something like this:
+
+nginx.service - A high performance web server and a reverse proxy server
+Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)
+Active: active (running) since Sun 2018-04-29 06:43:26 UTC; 8s ago
+Docs: man:nginx(8)
+Process: 3091 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+Process: 3080 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+Main PID: 3095 (nginx)
+Tasks: 2 (limit: 507)
+CGroup: /system.slice/nginx.service
+           ├─3095 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
+           └─3097 nginx: worker process
+
+### Configuring firewall
+Assuming you are using UFW to manage your firewall, you'll need to open HTTP (80) and HTTPS (443) ports. You can do that by enabling the ‘Nginx Full’ profile which includes rules for both ports:
+```bash
+sudo ufw allow 'Nginx Full'
+```
+
+To verify the status type:
+```bash
+sudo ufw status
+```
+The output will look something like the following:
+```bash
+Status: active
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW       Anywhere
+Nginx Full                 ALLOW       Anywhere
+22/tcp (v6)                ALLOW       Anywhere (v6)
+Nginx Full (v6)            ALLOW       Anywhere (v6)
+```
+### Test the Installation
+You can test your new Nginx installation open http://YOUR_IP in your browser of choice, and you will be presented with the default Nginx landing page as shown on the image below:
+<Coming!>
+
+
 ### Install MariaDB, create database and user
 ```bash
 sudo apt -y install mariadb-server mariadb-client
