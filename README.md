@@ -24,7 +24,7 @@ Once the installation is completed, Nginx service will start automatically. You 
 sudo systemctl status nginx
 ```
 The output will look something like this:
-
+```bash
 nginx.service - A high performance web server and a reverse proxy server
 Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)
 Active: active (running) since Sun 2018-04-29 06:43:26 UTC; 8s ago
@@ -36,7 +36,7 @@ Tasks: 2 (limit: 507)
 CGroup: /system.slice/nginx.service
            ├─3095 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
            └─3097 nginx: worker process
-
+```
 ### Configuring firewall
 Assuming you are using UFW to manage your firewall, you'll need to open HTTP (80) and HTTPS (443) ports. You can do that by enabling the ‘Nginx Full’ profile which includes rules for both ports:
 ```bash
