@@ -124,8 +124,8 @@ You can name the configuration file as you like but usually it is best to use th
 To enable the new server block file we need to create a symbolic link from the file to the sites-enabled directory, which is read by Nginx during startup:
 ```bash
 sudo ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/
-Test the Nginx configuration for correct syntax:
 ```
+Test the Nginx configuration for correct syntax:
 ```bash
 sudo nginx -t
 ```
