@@ -6,7 +6,7 @@ With features like Engaging Shopping Experiences, Flexible Modular Architecture 
 
 In this tutorial, we will show you how to install Magento 2 on an Ubuntu 18.04 VPS with MySQL, PHP-FPM 7.2, Varnish as a full page cache, Nginx as SSL termination and Redis for session storage and page caching.
 
-## Update the system packages to the latest versions and install the unzip utility:
+## Update the system packages and install the unzip utility
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install unzip -y
