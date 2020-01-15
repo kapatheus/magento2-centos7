@@ -150,12 +150,9 @@ add_header X-Frame-Options SAMEORIGIN;
 add_header X-Content-Type-Options nosniff;
 ```
 
-Once the snippets are created, open the domain server block and include the letsencrypt.conf snippet as shown below:
+You can now run Certbot with the webroot plugin and obtain the SSL certificate files by issuing:
 ```bash
-sudo nano /etc/nginx/sites-available/example.com
-```
-```bash
-
+sudo certbot certonly --agree-tos --email admin@example.com --webroot -w /var/lib/letsencrypt/ -d example.com -d www.example.com
 ```
 ### Configuring Nginx
 ```bash
