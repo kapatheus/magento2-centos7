@@ -685,7 +685,7 @@ Varnish is a fast reverse-proxy HTTP accelerator that will sit in front of our w
 
 Install Varnish via yum with the following command:
 ```bash
-sudo yum install varnish
+sudo apt install varnish -y
 ```
 
 To configure Magento to use Varnish run:
