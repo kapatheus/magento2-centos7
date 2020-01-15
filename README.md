@@ -141,6 +141,179 @@ sudo systemctl restart nginx
 Finally to verify the server block is working as expected open http://example.com in your browser of choice, and you will see something like this:
 <Coming!>
 
+#### Secure Nginx with Let's Encrypt
+Let's Encrypt is a free and open certificate authority developed by the Internet Security Research Group (ISRG). Certificates issued by Let's Encrypt are trusted by almost all browsers today.
+
+### Install Certbot
+Certbot is a fully featured and easy to use tool that can automate the tasks for obtaining and renewing Let’s Encrypt SSL certificates and configuring web servers to use the certificates. The certbot package is included in the default Ubuntu repositories.
+
+Install the certbot package:
+```bash
+sudo apt install certbot -y
+```
+### Generate Strong Dh (Diffie-Hellman) Group
+Diffie–Hellman key exchange (DH) is a method of securely exchanging cryptographic keys over an unsecured communication channel. We're going to generate a new set of 2048 bit DH parameters to strengthen the security:
+```bash
+sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+```
+If you like you can change the size up to 4096 bits, but in that case, the generation may take more than 30 minutes depending on the system entropy.
+
+### Obtaining a Let's Encrypt SSL certificate
+
+To obtain an SSL certificate for our domain we're going to use the Webroot plugin that works by creating a temporary file for validating the requested domain in the ${webroot-path}/.well-known/acme-challenge directory. The Let’s Encrypt server makes HTTP requests to the temporary file to validate that the requested domain resolves to the server where certbot runs.
+
+To make it more simple we're going to map all HTTP requests for .well-known/acme-challenge to a single directory, /var/lib/letsencrypt.
+
+The following commands will create the directory and make it writable for the Nginx server.
+```bash
+mkdir -p /var/lib/letsencrypt/.well-known
+chgrp www-data /var/lib/letsencrypt
+chmod g+s /var/lib/letsencrypt
+```bash
+To avoid duplicating code create the following two snippets which we're going to include in all our Nginx server block files. Create the first snippet, letsencrypt.conf:
+```bash
+sudo nano /etc/nginx/snippets/letsencrypt.conf
+```
+```bash
+location ^~ /.well-known/acme-challenge/ {
+  allow all;
+  root /var/lib/letsencrypt/;
+  default_type "text/plain";
+  try_files $uri =404;
+}
+```
+Create the second snippet ssl.conf which includes the chippers recommended by Mozilla, enables OCSP Stapling, HTTP Strict Transport Security (HSTS) and enforces few security‑focused HTTP headers.
+```bash
+sudo nano /etc/nginx/snippets/ssl.conf
+```
+```bash
+ssl_dhparam /etc/ssl/certs/dhparam.pem;
+
+ssl_session_timeout 1d;
+ssl_session_cache shared:SSL:50m;
+ssl_session_tickets off;
+
+ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+ssl_ciphers 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS';
+ssl_prefer_server_ciphers on;
+
+ssl_stapling on;
+ssl_stapling_verify on;
+resolver 8.8.8.8 8.8.4.4 valid=300s;
+resolver_timeout 30s;
+
+add_header Strict-Transport-Security "max-age=15768000; includeSubdomains; preload";
+add_header X-Frame-Options SAMEORIGIN;
+add_header X-Content-Type-Options nosniff;
+Copy
+Once the snippets are created, open the domain server block and include the letsencrypt.conf snippet as shown below:
+
+sudo nano /etc/nginx/sites-available/example.com
+/etc/nginx/sites-available/example.com
+server {
+  listen 80;
+  server_name example.com www.example.com;
+
+  include snippets/letsencrypt.conf;
+}
+```
+To enable the new server block file we need to create a symbolic link from the file to the sites-enabled directory, which is read by Nginx during startup:
+```bash
+sudo ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/
+```
+Restart the Nginx service for the changes to take effect:
+```bash
+sudo systemctl restart nginx
+```
+You can now run Certbot with the webroot plugin and obtain the SSL certificate files by issuing:
+```bash
+sudo certbot certonly --agree-tos --email admin@example.com --webroot -w /var/lib/letsencrypt/ -d example.com -d www.example.com
+```
+
+If the SSL certificate is successfully obtained, certbot will print the following message:
+```bash
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at:
+   /etc/letsencrypt/live/example.com/fullchain.pem
+   Your key file has been saved at:
+   /etc/letsencrypt/live/example.com/privkey.pem
+   Your cert will expire on 2018-07-28. To obtain a new or tweaked
+   version of this certificate in the future, simply run certbot
+   again. To non-interactively renew *all* of your certificates, run
+   "certbot renew"
+ - Your account credentials have been saved in your Certbot
+   configuration directory at /etc/letsencrypt. You should make a
+   secure backup of this folder now. This configuration directory will
+   also contain certificates and private keys obtained by Certbot so
+   making regular backups of this folder is ideal.
+ - If you like Certbot, please consider supporting our work by:
+
+   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+   Donating to EFF:                    https://eff.org/donate-le
+```
+Now that you have the certificate files, you can edit your domain server block as follows:
+```bash
+sudo nano /etc/nginx/sites-available/example.com
+```
+```bash
+server {
+    listen 80;
+    server_name www.example.com example.com;
+
+    include snippets/letsencrypt.conf;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name www.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/example.com/chain.pem;
+    include snippets/ssl.conf;
+    include snippets/letsencrypt.conf;
+
+    return 301 https://example.com$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name example.com;
+
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/example.com/chain.pem;
+    include snippets/ssl.conf;
+    include snippets/letsencrypt.conf;
+
+    # . . . other code
+}
+```
+With the configuration above we are forcing HTTPS and redirecting from www to non www version.
+
+Reload the Nginx service for changes to take effect:
+```bash
+sudo systemctl reload nginx
+```
+
+#### Auto-renewing Let's Encrypt SSL certificate
+Let's Encrypt's certificates are valid for 90 days. To automatically renew the certificates before they expire, the certbot package creates a cronjob which runs twice a day and will automatically renew any certificate 30 days before its expiration.
+
+
+Since we are using the certbot webroot plug-in once the certificate is renewed we also have to reload the nginx service. Append --renew-hook "systemctl reload nginx" to the /etc/cron.d/certbot file so as it looks like this:
+```bash
+sudo nano /etc/cron.d/certbot
+```
+```bash
+0 */12 * * * root test -x /usr/bin/certbot -a \! -d /run/systemd/system && perl -e 'sleep int(rand(3600))' && certbot -q renew --renew-hook "systemctl reload nginx"
+```
+To test the renewal process, you can use the certbot --dry-run switch:
+```bash
+sudo certbot renew --dry-run
+```
+If there are no errors, it means that the renewal process was successful.
+
 ### Install MariaDB, create database and user
 ```bash
 sudo apt -y install mariadb-server mariadb-client
@@ -216,72 +389,7 @@ php bin/magento setup:install --base-url=https://example.com/ --base-url-secure=
 php ~/public_html/bin/magento cron:install
 crontab -l
 ```
-### Secure Nginx with Let's Encrypt
-```bash
-sudo apt update
-sudo apt install certbot -y
-```
-### Generate Strong Dh (Diffie-Hellman) Group
-Diffie–Hellman key exchange (DH) is a method of securely exchanging cryptographic keys over an unsecured communication channel. We're going to generate a new set of 2048 bit DH parameters to strengthen the security:
-```bash
-sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
-```
-If you like you can change the size up to 4096 bits, but in that case, the generation may take more than 30 minutes depending on the system entropy.
-### Obtaining a Let's Encrypt SSL certificate
-To obtain an SSL certificate for our domain we're going to use the Webroot plugin that works by creating a temporary file for validating the requested domain in the ${webroot-path}/.well-known/acme-challenge directory. The Let’s Encrypt server makes HTTP requests to the temporary file to validate that the requested domain resolves to the server where certbot runs.
 
-To make it more simple we're going to map all HTTP requests for .well-known/acme-challenge to a single directory, /var/lib/letsencrypt.
-
-The following commands will create the directory and make it writable for the Nginx server.
-```bash
-mkdir -p /var/lib/letsencrypt/.well-known
-chgrp www-data /var/lib/letsencrypt
-chmod g+s /var/lib/letsencrypt
-```
-
-To avoid duplicating code create the following two snippets which we're going to include in all our Nginx server block files.
-Open your text editor and create the first snippet, letsencrypt.conf:
-```bash
-sudo nano /etc/nginx/snippets/letsencrypt.conf
-```
-```bash
-location ^~ /.well-known/acme-challenge/ {
-  allow all;
-  root /var/lib/letsencrypt/;
-  default_type "text/plain";
-  try_files $uri =404;
-}
-```
-
-Create the second snippet ssl.conf which includes the chippers recommended by Mozilla, enables OCSP Stapling, HTTP Strict Transport Security (HSTS) and enforces few security‑focused HTTP headers.
-```bash
-sudo nano /etc/nginx/snippets/ssl.conf
-```
-```bash
-ssl_dhparam /etc/ssl/certs/dhparam.pem;
-
-ssl_session_timeout 1d;
-ssl_session_cache shared:SSL:50m;
-ssl_session_tickets off;
-
-ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-ssl_ciphers 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS';
-ssl_prefer_server_ciphers on;
-
-ssl_stapling on;
-ssl_stapling_verify on;
-resolver 8.8.8.8 8.8.4.4 valid=300s;
-resolver_timeout 30s;
-
-add_header Strict-Transport-Security "max-age=15768000; includeSubdomains; preload";
-add_header X-Frame-Options SAMEORIGIN;
-add_header X-Content-Type-Options nosniff;
-```
-
-You can now run Certbot with the webroot plugin and obtain the SSL certificate files by issuing:
-```bash
-sudo certbot certonly --agree-tos --email admin@example.com --webroot -w /var/lib/letsencrypt/ -d example.com -d www.example.com
-```
 ### Configuring Nginx
 ```bash
 sudo nano /etc/nginx/sites-available/example.com
