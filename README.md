@@ -608,3 +608,126 @@ sudo systemctl restart nginx
 ## Verifying the Installation
 Open your browser, type your domain and assuming the installation is successful, a screen similar to the following will appear:
 You can now go to the Magento Admin URI, log in as the admin user and start customizing your new Magento installation.
+
+
+# Varnish
+The page speed or loading time is crucial to the success of your online store. The loading time is the total amount of time it takes the content on a specific page to load. The longer the loading time is, the lower the conversion rate. It is also one of the most important factors that Google considers to determine the search engine rankings.
+
+Varnish does not support SSL, so we need to use another service as an SSL Termination Proxy, in our case that will be Nginx.
+
+When a visitor opens your website over HTTPS on port 443 the request will be handled by Nginx which works as a proxy and passes the request to Varnish (on port 80). Varnish checks if the request is cached or not. If it is cached, Varnish will return the cached data to Nginx without a request to the Magento application. If the request is not cached Varnish will pass the request to Nginx on port 8080 which will pull data from Magento and Varnish will cache the response.
+
+## Configuring Nginx
+We need to edit the Nginx server block which handle SSL/TLS termination and as a back-end for Varnish.
+```bash
+sudo nano /etc/nginx/sites-available/example.com
+```
+```bash
+upstream fastcgi_backend {
+  server   unix:/run/php-fpm/magento.sock;
+}
+
+server {
+    listen 127.0.0.1:8080;
+    server_name example.com www.example.com;
+
+    set $MAGE_ROOT /opt/magento/public_html;
+    set $MAGE_MODE developer; # or production
+
+    include snippets/letsencrypt.conf;
+    include /opt/magento/public_html/nginx.conf.sample;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name www.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/example.com/chain.pem;
+    include snippets/ssl.conf;
+
+    return 301 https://example.com$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name example.com;
+
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/example.com/chain.pem;
+    include snippets/ssl.conf;
+
+    access_log /var/log/nginx/example.com-access.log;
+    error_log /var/log/nginx/example.com-error.log;
+
+    location / {
+        proxy_pass http://127.0.0.1;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Port 443;
+    }
+}
+
+```
+
+Reload the Nginx service for changes to take effect:
+```bash
+sudo systemctl reload nginx
+```
+
+### Installing and Configuring Varnish 
+Varnish is a fast reverse-proxy HTTP accelerator that will sit in front of our web server and it will be used as a Full Page Cache solution for our Magento installation.
+
+Install Varnish via yum with the following command:
+```bash
+sudo yum install varnish
+```
+
+To configure Magento to use Varnish run:
+```bash
+php /opt/magento/public_html/bin/magento config:set --scope=default --scope-code=0 system/full_page_cache/caching_application 2
+```
+
+Next, we need to generate a Varnish configuration file:
+```bash
+sudo php /opt/magento/public_html/bin/magento varnish:vcl:generate > /etc/varnish/default.vcl
+```
+The command above needs to be run as a root or user with sudo privileges and it will create a file /etc/varnish/default.vcl using the default values which are localhost as back-end host and port 8080 as back-end port.
+
+The default configuration comes with a wrong URL for the health check file. Open the default.vcl file and remove the /pub part from the line highlighted in yellow:
+```bash
+nano /etc/varnish/default.vcl
+```
+```bash
+...
+.probe = {
+     # .url = "/pub/health_check.php";
+     .url = "/health_check.php";
+     .timeout = 2s;
+     .interval = 5s;
+     .window = 10;
+     .threshold = 5;
+}
+...
+```
+
+By default, Varnish listens on port 6081, and we need to change it to 80:
+```bash
+nano /etc/varnish/varnish.params
+```
+```bash
+VARNISH_LISTEN_PORT=80
+```
+
+Once you are done with the modifications, start and enable the Varnish service:
+```bash
+sudo systemctl enable varnish
+sudo systemctl start varnish
+```
+You can use the varnishlog tool to view real-time web requests and for debugging Varnish.
+
