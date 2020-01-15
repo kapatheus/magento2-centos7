@@ -92,7 +92,7 @@ To avoid any permission issues we can change the ownership of the domain documen
 ```bash
 sudo chown -R www-data: /var/www/example.com
 ```
-#### Create a Server Block
+### Create a Server Block
 By default on Ubuntu systems, Nginx server blocks configuration files are stored in /etc/nginx/sites-available directory, which are enabled through symbolic links to the /etc/nginx/sites-enabled/ directory.
 
 Create the following server block file:
@@ -138,8 +138,8 @@ Restart the Nginx service for the changes to take effect:
 ```bash
 sudo systemctl restart nginx
 ```
-Finally to verify the server block is working as expected open http://example.com in your browser of choice, and you will see something like this:
-<Coming!>
+Finally to verify the server block is working as expected open http://example.com in your browser of choice, and you will see something like this: 
+![Image](https://raw.githubusercontent.com/kapatheus/magento2/master/nginx-screenshot.jpg)
 
 ## Secure Nginx with Let's Encrypt
 Let's Encrypt is a free and open certificate authority developed by the Internet Security Research Group (ISRG). Certificates issued by Let's Encrypt are trusted by almost all browsers today.
