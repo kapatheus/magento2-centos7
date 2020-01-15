@@ -59,7 +59,35 @@ pm.process_idle_timeout = 10s
 pm.max_requests = 500
 chdir = /
 ```
+```bash
+systemctl restart php7.2-fpm
+```
+```bash
+ls -al /var/run/php/php7.2-fpm-magento.sock
+```
+### Installing Composer
+Composer is a dependency manager for PHP and we will be using it to download the Magento core and install all necessary Magento components. To install composer globally, download the Composer installer with curl and move the file to the /usr/local/bin directory:
+```bash
+curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+```
+## Installing Magento
+There are several ways to install Magento 2. Avoid installing Magento from the Github repository because that version is intended for development and not for production installations.
 
+To be able to access to the Magento 2 code repository you'll need to generate authentication keys. If you don’t have a Magento Marketplace account, you can create one here.
+```bash
+sudo su - magento
+composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition /opt/magento/public_html
+```
+You'll be prompted to enter the access keys, copy the keys from your Magento marketplace account and store them in the auth.json file, so later when updating your installation you don’t have to add the same keys again.
+```bash
+cd ~/public_html
+php bin/magento setup:install --base-url=https://example.com/ --base-url-secure=https://example.com/ --admin-firstname="John" --admin-lastname="Doe" --admin-email="john@example.com" --admin-user="john" --admin-password="strong_password" --db-name="magentodb" --db-host="localhost" --db-user="magento" --currency=USD --timezone=America/Chicago --use-rewrites=1 --db-password="strong_password"
+```
+### Creating Magento crontab
+```bash
+php ~/public_html/bin/magento cron:install
+crontab -l
+```
 ### Secure Nginx with Let's Encrypt
 ```bash
 sudo apt update
