@@ -223,11 +223,13 @@ resolver_timeout 30s;
 add_header Strict-Transport-Security "max-age=15768000; includeSubdomains; preload";
 add_header X-Frame-Options SAMEORIGIN;
 add_header X-Content-Type-Options nosniff;
-Copy
-Once the snippets are created, open the domain server block and include the letsencrypt.conf snippet as shown below:
+```
 
+Once the snippets are created, open the domain server block and include the letsencrypt.conf snippet as shown below:
+```bash
 sudo nano /etc/nginx/sites-available/example.com
-/etc/nginx/sites-available/example.com
+```
+```bash
 server {
   listen 80;
   server_name example.com www.example.com;
