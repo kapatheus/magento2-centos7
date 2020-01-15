@@ -13,7 +13,7 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install nginx unzip -y
 sudo ufw allow 'Nginx Full'
 ```
-### Install MariaDB
+### Install MariaDB, create database and user
 ```bash
 sudo apt -y install mariadb-server mariadb-client
 mysql_secure_installation (answer yes for questions)
@@ -24,7 +24,7 @@ grant all privileges on magentodb.* to magento@localhost identified by 'strong_p
 flush privileges;
 exit
 ```
-### Creating System User
+### Create system user
 ```bash
 sudo useradd -m -U -r -d /opt/magento magento
 ```
