@@ -169,7 +169,7 @@ The following commands will create the directory and make it writable for the Ng
 mkdir -p /var/lib/letsencrypt/.well-known
 chgrp www-data /var/lib/letsencrypt
 chmod g+s /var/lib/letsencrypt
-```bash
+```
 To avoid duplicating code create the following two snippets which we're going to include in all our Nginx server block files. Create the first snippet, letsencrypt.conf:
 ```bash
 sudo nano /etc/nginx/snippets/letsencrypt.conf
@@ -510,6 +510,9 @@ crontab -l
 #~ MAGENTO END adc062915d7b30804a2b340095af072d
 ```
 ### Configuring Nginx
+By now, you should already have Nginx with SSL certificate installed on your Ubuntu server.
+We are going to include the default Nginx configuration shipped with Magento.
+Switch over to your sudo user, open your text editor and create the following file:
 ```bash
 sudo nano /etc/nginx/sites-available/example.com
 ```
@@ -558,11 +561,22 @@ server {
     include /opt/magento/public_html/nginx.conf.sample;
 }
 ```
+Don’t forget to replace example.com with your Magento domain and set the correct path to the SSL certificate files. The snippets used in this configuration are created in this guide.
+Before restarting the Nginx service make a test to be sure that there are no syntax errors:
 ```bash
 sudo nginx -t
 ```
+If there are no errors the output should look like this:
+```bash
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+Finally, restart the Nginx service by typing:
 ```bash
 sudo systemctl restart nginx
-```
-### Verifying the Installation
-Open your browser, type your domain and assuming the installation is successful!
+```bash
+
+## Verifying the Installation
+Open your browser, type your domain and assuming the installation is successful, a screen similar to the following will appear:
+You can now go to the Magento Admin URI, log in as the admin user and start customizing your new Magento installation.
