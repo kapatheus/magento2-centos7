@@ -330,15 +330,45 @@ grant all privileges on magentodb.* to magento@localhost identified by 'strong_p
 flush privileges;
 exit
 ```
-### Create system user
+### Creating System User
+Create a new user and group, which will be Magento file system owner , for simplicity we will name the user magento:
+
 ```bash
 sudo useradd -m -U -r -d /opt/magento magento
 ```
+
+Add the www-data user to the magento group and change the /opt/magento directory permissions so that the Nginx can access the Magento installation:
+```bash
+sudo usermod -a -G magento www-data
+sudo chmod 750 /opt/magento
+```
+
 ### Installing and Configuring PHP
+PHP 7.2 which is the default PHP version in Ubuntu 18.04 is fully supported and recommended for Magento 2.3. Since we will be using Nginx as a web server we'll also install the PHP-FPM package.
+
+Run the following command to install PHP and all required PHP modules:
 ```bash
 sudo apt install php7.2-common php7.2-cli php7.2-fpm php7.2-opcache php7.2-gd php7.2-mysql php7.2-curl php7.2-intl php7.2-xsl php7.2-mbstring php7.2-zip php7.2-bcmath php7.2-soap
 ```
-#### Set the required and recommended PHP options by editing the php.ini file with sed:
+
+PHP-FPM service will automatically start after the installation process is complete, you can verify it by printing the service status:
+```bash
+sudo systemctl status php7.2-fpm
+```
+
+The output should indicate that the fpm service is active and running.
+```bash
+php7.2-fpm.service - The PHP 7.2 FastCGI Process Manager
+Loaded: loaded (/lib/systemd/system/php7.2-fpm.service; enabled; vendor preset: enabled)
+Active: active (running) since Wed 2018-12-12 15:47:16 UTC; 5s ago
+Docs: man:php-fpm7.2(8)
+Main PID: 16814 (php-fpm7.2)
+Status: "Ready to handle connections"
+Tasks: 3 (limit: 505)
+CGroup: /system.slice/php7.2-fpm.service
+```
+
+### Set the required and recommended PHP options by editing the php.ini file with sed::
 ```bash
 sudo sed -i "s/;cgi.fix_pathinfo=1*/cgi.fix_pathinfo=0/" /etc/php/7.2/fpm/php.ini
 sudo sed -i "s/memory_limit = .*/memory_limit = 1024M/" /etc/php/7.2/fpm/php.ini
@@ -348,7 +378,9 @@ sudo sed -i "s/max_execution_time = .*/max_execution_time = 18000/" /etc/php/7.2
 sudo sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/7.2/fpm/php.ini
 sudo sed -i "s/;opcache.save_comments.*/opcache.save_comments = 1/" /etc/php/7.2/fpm/php.ini
 ```
-### Create a FPM pool for the magento user.
+
+Next we need to create a FPM pool for the magento user.
+Open your text editor and create the following file:
 ```bash
 sudo nano /etc/php/7.2/fpm/pool.d/magento.conf
 ```
@@ -365,36 +397,118 @@ pm.process_idle_timeout = 10s
 pm.max_requests = 500
 chdir = /
 ```
+
+Restart the PHP-FPM service for changes to take effect:
 ```bash
 systemctl restart php7.2-fpm
 ```
+
+Verify whether the PHP socket was successfully created by running the following ls command:
 ```bash
 ls -al /var/run/php/php7.2-fpm-magento.sock
 ```
+
+The output should look something like this:
+```bash
+srw-rw---- 1 magento www-data 0 Dec 12 16:07 /var/run/php/php7.2-fpm-magento.sock=
+```
+
 ### Installing Composer
-Composer is a dependency manager for PHP and we will be using it to download the Magento core and install all necessary Magento components. To install composer globally, download the Composer installer with curl and move the file to the /usr/local/bin directory:
+Composer is a dependency manager for PHP and we will be using it to download the Magento core and install all necessary Magento components.
+
+To install composer globally, download the Composer installer with curl and move the file to the /usr/local/bin directory:
 ```bash
 curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
 ```
+
+Verify the installation by printing the composer version:
+```bash
+composer --version
+```
+
+The output should look something like this:
+```bash
+Composer version 1.8.0 2018-12-03 10:31:16
+```
+
 ## Installing Magento
 There are several ways to install Magento 2. Avoid installing Magento from the Github repository because that version is intended for development and not for production installations.
+At the time of writing this article, the latest stable version of Magento is version 2.3.0. In this tutorial, we will install Magento from their repositories using composer.
 
-To be able to access to the Magento 2 code repository you'll need to generate authentication keys. If you don’t have a Magento Marketplace account, you can create one here.
+Switch over to the user magento by typing:
 ```bash
 sudo su - magento
-composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition /opt/magento/public_html
-```
-You'll be prompted to enter the access keys, copy the keys from your Magento marketplace account and store them in the auth.json file, so later when updating your installation you don’t have to add the same keys again.
-```bash
-cd ~/public_html
-php bin/magento setup:install --base-url=https://example.com/ --base-url-secure=https://example.com/ --admin-firstname="John" --admin-lastname="Doe" --admin-email="john@example.com" --admin-user="john" --admin-password="strong_password" --db-name="magentodb" --db-host="localhost" --db-user="magento" --currency=USD --timezone=America/Chicago --use-rewrites=1 --db-password="strong_password"
-```
-### Creating Magento crontab
-```bash
-php ~/public_html/bin/magento cron:install
-crontab -l
 ```
 
+Start the installation by downloading magento files to the /opt/magento/public_html directory:
+```bash
+composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition /opt/magento/public_html
+```
+
+You'll be prompted to enter the access keys, copy the keys from your Magento marketplace account and store them in the auth.json file, so later when updating your installation you don’t have to add the same keys again.
+```bash
+    Authentication required (repo.magento.com):
+      Username: e758ec1745d190320ca246e4e832e12c
+      Password: 
+Do you want to store credentials for repo.magento.com in /opt/magento/.config/composer/auth.json ? [Yn] Y
+```
+The command above will fetch all required PHP packages. The process may take a few minutes and if it is successful the end of the output should look like the following:
+```bash
+Writing lock file
+Generating autoload files
+```
+
+Once the project is created we can start the Magento installation. We can install Magento either from the command line or using the web Setup Wizard. In this tutorial, we'll install Magento using the command line.
+
+We will use the following options to install the Magento store:
+
+Base and Base secure URLs are set to https://example.com, change it with your domain.
+Magento administrator:
+John Doe as first and last name.
+john@example.com as email.
+john as username and j0hnP4ssvv0rD as password.
+Database name magento, username magento, password change-with-strong-password and the database server is on the same host as the web server.
+en_US, US English as a default language.
+USD dollars as default currency.
+America/Chicago as a time zone.
+You can find all the installation options here.
+Change to the Magento ~/public_html directory:
+```bash
+cd ~/public_html
+```
+
+Run the following command to start the installation:
+```bash
+php bin/magento setup:install --base-url=https://example.com/ --base-url-secure=https://example.com/ --admin-firstname="John" --admin-lastname="Doe" --admin-email="john@example.com" --admin-user="john" --admin-password="strong_password" --db-name="magentodb" --db-host="localhost" --db-user="magento" --currency=USD --timezone=America/Chicago --use-rewrites=1 --db-password="strong_password"
+```
+Don't forget to change the password (j0hnP4ssvv0rD) to something more secure.
+The process may take a few minutes and once completed you will be presented with a message that contains the URI to the Magento admin dashboard.
+```bash
+[Progress: 773 / 773]
+[SUCCESS]: Magento installation complete.
+[SUCCESS]: Magento Admin URI: /admin_13nv5k
+Nothing to import.
+```
+
+### Creating Magento crontab
+Magento uses cron jobs to schedule tasks like re-indexing, notifications, sitemaps, emails and more.
+To create the Magento crontab run the following command as magento user:
+```bash
+php ~/public_html/bin/magento cron:install
+```
+Crontab has been generated and saved
+
+Verify that the crontab is installed by typing:
+```bash
+crontab -l
+```
+```bash
+#~ MAGENTO START adc062915d7b30804a2b340095af072d
+* * * * * /usr/bin/php7.2 /opt/magento/public_html/bin/magento cron:run 2>&1 | grep -v "Ran jobs by schedule" >> /opt/magento/public_html/var/log/magento.cron.log
+* * * * * /usr/bin/php7.2 /opt/magento/public_html/update/cron.php >> /opt/magento/public_html/var/log/update.cron.log
+* * * * * /usr/bin/php7.2 /opt/magento/public_html/bin/magento setup:cron:run >> /opt/magento/public_html/var/log/setup.cron.log
+#~ MAGENTO END adc062915d7b30804a2b340095af072d
+```
 ### Configuring Nginx
 ```bash
 sudo nano /etc/nginx/sites-available/example.com
