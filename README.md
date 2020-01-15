@@ -5,7 +5,7 @@ Magento is leading enterprise-class e-commerce platform built on open-source tec
 
 With features like Engaging Shopping Experiences, Flexible Modular Architecture and Enterprise-grade Scalability and Performance Magento is a platform of choice for most online merchants.
 
-In this tutorial, we will show you how to install Magento 2 on an Ubuntu 18.04 VPS with MySQL, PHP-FPM 7.2, Varnish as a full page cache, Nginx as SSL termination and Redis for session storage and page caching.
+In this tutorial, I will show you how to install Magento 2 on an Ubuntu 18.04 VPS with MySQL, PHP-FPM 7.2, Varnish as a full page cache, Nginx as SSL termination and Redis for session storage and page caching.
 
 ## Update the system packages and install the unzip utility
 ```bash
@@ -20,10 +20,12 @@ Nginx packages are available in the default Ubuntu repositories. The installatio
 ```bash
 sudo apt install nginx
 ```
+
 Once the installation is completed, Nginx service will start automatically. You can check the status of the service with the following command:
 ```bash
 sudo systemctl status nginx
 ```
+
 The output will look something like this:
 ```bash
 nginx.service - A high performance web server and a reverse proxy server
@@ -38,6 +40,7 @@ CGroup: /system.slice/nginx.service
            ├─3095 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
            └─3097 nginx: worker process
 ```
+
 ### Configuring firewall
 Assuming you are using UFW to manage your firewall, you'll need to open HTTP (80) and HTTPS (443) ports. You can do that by enabling the ‘Nginx Full’ profile which includes rules for both ports:
 ```bash
@@ -48,6 +51,7 @@ To verify the status type:
 ```bash
 sudo ufw status
 ```
+
 The output will look something like the following:
 ```bash
 Status: active
@@ -59,6 +63,7 @@ Nginx Full                 ALLOW       Anywhere
 22/tcp (v6)                ALLOW       Anywhere (v6)
 Nginx Full (v6)            ALLOW       Anywhere (v6)
 ```
+
 ### Test the Installation
 You can test your new Nginx installation open http://YOUR_IP in your browser of choice, and you will be presented with the default Nginx landing page as shown on the image below:
 
@@ -68,10 +73,11 @@ You can test your new Nginx installation open http://YOUR_IP in your browser of 
 ## Set Up Nginx Server Blocks
 Nginx Server Blocks allows you to run more than one website on a single machine. With Server Blocks, you can specify the site document root (the directory which contains the website files), create a separate security policy for each site, use different SSL certificates for each site and much more.
 
-Let's create the root directory for our domain example.com:
+So let's create the root directory for our domain example.com:
 ```bash
 sudo mkdir -p /var/www/example.com/public_html
 ```
+
 For testing purposes we will create an index.html file inside the domain's document root directory.
 Open your editor and create the demo file:
 ```bash
@@ -89,17 +95,17 @@ nano /var/www/example.com/public_html/index.html
   </body>
 </html>
 ```
-In this guide, we are running the commands as sudo user and the newly created files and directories are owned by the root user.
 
+We are running the commands as sudo user and the newly created files and directories are owned by the root user.
 To avoid any permission issues we can change the ownership of the domain document root directory to the Nginx user (www-data):
 ```bash
 sudo chown -R www-data: /var/www/example.com
 ```
+
 ### Create a Server Block
 By default on Ubuntu systems, Nginx server blocks configuration files are stored in /etc/nginx/sites-available directory, which are enabled through symbolic links to the /etc/nginx/sites-enabled/ directory.
 
 Create the following server block file:
-
 ```bash
 /etc/nginx/sites-available/example.com
 ```
@@ -128,19 +134,23 @@ To enable the new server block file we need to create a symbolic link from the f
 ```bash
 sudo ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/
 ```
+
 Test the Nginx configuration for correct syntax:
 ```bash
 sudo nginx -t
 ```
+
 If there are no errors the output will look like this:
 ```bash
 nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
 nginx: configuration file /etc/nginx/nginx.conf test is successful
 ```
+
 Restart the Nginx service for the changes to take effect:
 ```bash
 sudo systemctl restart nginx
 ```
+
 Finally to verify the server block is working as expected open http://example.com in your browser of choice, and you will see something like this:
 
 ![Image](https://github.com/kapatheus/magento2/blob/master/nginx-welcome-page.jpg)
@@ -156,6 +166,7 @@ Install the certbot package:
 ```bash
 sudo apt install certbot -y
 ```
+
 ### Generate Strong Dh (Diffie-Hellman) Group
 Diffie–Hellman key exchange (DH) is a method of securely exchanging cryptographic keys over an unsecured communication channel. We're going to generate a new set of 2048 bit DH parameters to strengthen the security:
 ```bash
@@ -175,6 +186,7 @@ mkdir -p /var/lib/letsencrypt/.well-known
 chgrp www-data /var/lib/letsencrypt
 chmod g+s /var/lib/letsencrypt
 ```
+
 To avoid duplicating code create the following two snippets which we're going to include in all our Nginx server block files. Create the first snippet, letsencrypt.conf:
 ```bash
 sudo nano /etc/nginx/snippets/letsencrypt.conf
@@ -187,6 +199,7 @@ location ^~ /.well-known/acme-challenge/ {
   try_files $uri =404;
 }
 ```
+
 Create the second snippet ssl.conf which includes the chippers recommended by Mozilla, enables OCSP Stapling, HTTP Strict Transport Security (HSTS) and enforces few security‑focused HTTP headers.
 ```bash
 sudo nano /etc/nginx/snippets/ssl.conf
@@ -222,14 +235,17 @@ server {
   include snippets/letsencrypt.conf;
 }
 ```
+
 To enable the new server block file we need to create a symbolic link from the file to the sites-enabled directory, which is read by Nginx during startup:
 ```bash
 sudo ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/
 ```
+
 Restart the Nginx service for the changes to take effect:
 ```bash
 sudo systemctl restart nginx
 ```
+
 You can now run Certbot with the webroot plugin and obtain the SSL certificate files by issuing:
 ```bash
 sudo certbot certonly --agree-tos --email admin@example.com --webroot -w /var/lib/letsencrypt/ -d example.com -d www.example.com
@@ -256,6 +272,7 @@ IMPORTANT NOTES:
    Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
    Donating to EFF:                    https://eff.org/donate-le
 ```
+
 Now that you have the certificate files, you can edit your domain server block as follows:
 ```bash
 sudo nano /etc/nginx/sites-available/example.com
@@ -313,6 +330,7 @@ sudo nano /etc/cron.d/certbot
 ```bash
 0 */12 * * * root test -x /usr/bin/certbot -a \! -d /run/systemd/system && perl -e 'sleep int(rand(3600))' && certbot -q renew --renew-hook "systemctl reload nginx"
 ```
+
 To test the renewal process, you can use the certbot --dry-run switch:
 ```bash
 sudo certbot renew --dry-run
@@ -326,6 +344,7 @@ sudo apt -y install mariadb-server mariadb-client
 mysql_secure_installation
 ```
 (Answer yes for all questions)
+
 ### Creating MySQL database and user
 ```bash
 sudo mysql
@@ -335,9 +354,9 @@ grant all privileges on magentodb.* to magento@localhost identified by 'strong_p
 flush privileges;
 exit
 ```
+
 ### Creating System User
 Create a new user and group, which will be Magento file system owner , for simplicity we will name the user magento:
-
 ```bash
 sudo useradd -m -U -r -d /opt/magento magento
 ```
@@ -471,12 +490,12 @@ Base and Base secure URLs are set to https://example.com, change it with your do
 Magento administrator:
 John Doe as first and last name.
 john@example.com as email.
-john as username and j0hnP4ssvv0rD as password.
-Database name magento, username magento, password change-with-strong-password and the database server is on the same host as the web server.
+john as username and strong_password as password.
+Database name magentodb, username magento, password strong_password and the database server is on the same host as the web server.
 en_US, US English as a default language.
 USD dollars as default currency.
 America/Chicago as a time zone.
-You can find all the installation options here.
+
 Change to the Magento ~/public_html directory:
 ```bash
 cd ~/public_html
@@ -486,7 +505,8 @@ Run the following command to start the installation:
 ```bash
 php bin/magento setup:install --base-url=https://example.com/ --base-url-secure=https://example.com/ --admin-firstname="John" --admin-lastname="Doe" --admin-email="john@example.com" --admin-user="john" --admin-password="strong_password" --db-name="magentodb" --db-host="localhost" --db-user="magento" --currency=USD --timezone=America/Chicago --use-rewrites=1 --db-password="strong_password"
 ```
-Don't forget to change the password (j0hnP4ssvv0rD) to something more secure.
+
+Don't forget to change the password (strong_password) to something more secure.
 The process may take a few minutes and once completed you will be presented with a message that contains the URI to the Magento admin dashboard.
 ```bash
 [Progress: 773 / 773]
@@ -571,6 +591,7 @@ Before restarting the Nginx service make a test to be sure that there are no syn
 ```bash
 sudo nginx -t
 ```
+
 If there are no errors the output should look like this:
 ```bash
 nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
@@ -580,7 +601,7 @@ nginx: configuration file /etc/nginx/nginx.conf test is successful
 Finally, restart the Nginx service by typing:
 ```bash
 sudo systemctl restart nginx
-```bash
+```
 
 ## Verifying the Installation
 Open your browser, type your domain and assuming the installation is successful, a screen similar to the following will appear:
