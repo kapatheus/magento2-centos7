@@ -1,11 +1,14 @@
 ![Image](https://github.com/kapatheus/magento2/blob/master/magento-2.jpg)
-# Magento 2
+# Magento 2 + Centos 7 + Nginx + Lets's Encrypt SSL + MariaDB + Varnish + Redis
 
 Magento is leading enterprise-class e-commerce platform built on open-source technology combining powerful features with flexibility and user-friendly interface.
 
 With features like Engaging Shopping Experiences, Flexible Modular Architecture and Enterprise-grade Scalability and Performance Magento is a platform of choice for most online merchants.
 
-In this tutorial, I will show you how to install Magento 2 on an Ubuntu 18.04 VPS with MySQL, PHP-FPM 7.2, Varnish as a full page cache, Nginx as SSL termination and Redis for session storage and page caching.
+In this tutorial we need these:
+- CentOS 7 server, according to the official Magento 2 system requirements you need at least 2G of RAM. If you are using a server with less than 2GB of RAM, you should create a swap file.
+- Logged in as a user account with sudo privileges.
+- A domain name pointing to your public server IP. In this tutorial, we will use example.com.
 
 ## Update the system packages and install the unzip utility
 ```bash
