@@ -12,66 +12,28 @@ In this tutorial we need these:
 
 ## Update the system packages and install the unzip utility
 ```bash
-sudo apt update && sudo apt upgrade -y
+sudo yum update -y
 sudo apt install unzip -y
 ```
 
 ## Installing Nginx
 Nginx pronounced “engine x” is a free, open-source, high-performance HTTP and reverse proxy server responsible for handling the load of some of the largest sites on the Internet. Nginx can be used as a standalone web server, and as a reverse proxy for Apache and other web servers. Compared to Apache, Nginx can handle a much large number of concurrent connections and has a smaller memory footprint per connection.
 
-Nginx packages are available in the default Ubuntu repositories. The installation is pretty straightforward.
+Nginx is not available in the default CentOS 7 repository so we will use the EPEL repositories. To add the EPEL repository to your system, use the following command:
 ```bash
-sudo apt install nginx
+sudo yum install epel-release
 ```
 
-Once the installation is completed, Nginx service will start automatically. You can check the status of the service with the following command:
+Now that the EPEL repository is enabled, install the Nginx package with:
 ```bash
-sudo systemctl status nginx
+sudo yum install nginx
 ```
 
-The output will look something like this:
+Once it is installed, start and enable the Nginx service by typing:
 ```bash
-nginx.service - A high performance web server and a reverse proxy server
-Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)
-Active: active (running) since Sun 2018-04-29 06:43:26 UTC; 8s ago
-Docs: man:nginx(8)
-Process: 3091 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
-Process: 3080 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
-Main PID: 3095 (nginx)
-Tasks: 2 (limit: 507)
-CGroup: /system.slice/nginx.service
-           ├─3095 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
-           └─3097 nginx: worker process
+sudo systemctl start nginx
+sudo systemctl enable nginx
 ```
-
-### Configuring firewall
-Assuming you are using UFW to manage your firewall, you'll need to open HTTP (80) and HTTPS (443) ports. You can do that by enabling the ‘Nginx Full’ profile which includes rules for both ports:
-```bash
-sudo ufw allow 'Nginx Full'
-```
-
-To verify the status type:
-```bash
-sudo ufw status
-```
-
-The output will look something like the following:
-```bash
-Status: active
-
-To                         Action      From
---                         ------      ----
-22/tcp                     ALLOW       Anywhere
-Nginx Full                 ALLOW       Anywhere
-22/tcp (v6)                ALLOW       Anywhere (v6)
-Nginx Full (v6)            ALLOW       Anywhere (v6)
-```
-
-### Test the Installation
-You can test your new Nginx installation open http://YOUR_IP in your browser of choice, and you will be presented with the default Nginx landing page as shown on the image below:
-
-![Image](https://raw.githubusercontent.com/kapatheus/magento2/master/nginx-screenshot.jpg)
-
 
 ## Set Up Nginx Server Blocks
 Nginx Server Blocks allows you to run more than one website on a single machine. With Server Blocks, you can specify the site document root (the directory which contains the website files), create a separate security policy for each site, use different SSL certificates for each site and much more.
@@ -84,7 +46,7 @@ sudo mkdir -p /var/www/example.com/public_html
 For testing purposes we will create an index.html file inside the domain's document root directory.
 Open your editor and create the demo file:
 ```bash
-nano /var/www/example.com/public_html/index.html
+sudo nano /var/www/example.com/public_html/index.html
 ```
 ```bash
 <!DOCTYPE html>
@@ -100,17 +62,18 @@ nano /var/www/example.com/public_html/index.html
 ```
 
 We are running the commands as sudo user and the newly created files and directories are owned by the root user.
-To avoid any permission issues we can change the ownership of the domain document root directory to the Nginx user (www-data):
+To avoid any permission issues we can change the ownership of the domain document root directory to the Nginx user (nginx):
 ```bash
-sudo chown -R www-data: /var/www/example.com
+sudo chown -R nginx: /var/www/example.com
 ```
 
 ### Create a Server Block
-By default on Ubuntu systems, Nginx server blocks configuration files are stored in /etc/nginx/sites-available directory, which are enabled through symbolic links to the /etc/nginx/sites-enabled/ directory.
+Nginx server block configuration files must end with .conf and are stored in /etc/nginx/conf.d directory.
+Open your editor of choice and create a server block configuration file for example.com.
 
 Create the following server block file:
 ```bash
-/etc/nginx/sites-available/example.com
+sudo nano /etc/nginx/conf.d/example.com.conf
 ```
 ```bash
 server {
@@ -133,12 +96,7 @@ server {
 ```
 You can name the configuration file as you like but usually it is best to use the domain name.
 
-To enable the new server block file we need to create a symbolic link from the file to the sites-enabled directory, which is read by Nginx during startup:
-```bash
-sudo ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/
-```
-
-Test the Nginx configuration for correct syntax:
+Save the file and test the Nginx configuration for correct syntax:
 ```bash
 sudo nginx -t
 ```
