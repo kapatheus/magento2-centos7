@@ -419,9 +419,9 @@ sudo systemctl restart php-fpm
 ```
 
 ## Installing Magento
-Composer is a dependency manager for PHP which is used for installing, updating and managing libraries.
+There are several ways to install Magento. Avoid installing Magento from the Github repository because that version is intended for development and not for production installations. In this tutorial, we will install Magento from their repositories using composer.
 
-To install composer globally, download the Composer installer with curl and move the file to the /usr/local/bin directory:
+Switch over to the user magento:
 ```bash
 sudo su - magento
 ```
@@ -431,12 +431,12 @@ Start the installation by downloading magento files to the /opt/magento/public_h
 composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition /opt/magento/public_html
 ```
 
-You'll be prompted to enter the access keys, copy the keys from your Magento marketplace account and store them in the auth.json file, so later when updating your installation you don’t have to add the same keys again.
+During the project creation, the composer will ask you to enter the access keys, copy the keys from your Magento marketplace account and store them in the auth.json file, so later when updating your installation you don't have to add the same keys again.
 ```bash
-    Authentication required (repo.magento.com):
-      Username: e758ec1745d190320ca246e4e832e12c
-      Password: 
-Do you want to store credentials for repo.magento.com in /opt/magento/.config/composer/auth.json ? [Yn] Y
+Authentication required (repo.magento.com):
+      Username: e758ec1745d190520ca246e4e832e12c
+      Password:
+Do you want to store credentials for repo.magento.com in /opt/magento/.config/composer/auth.json ? [Yn]
 ```
 The command above will fetch all required PHP packages. The process may take a few minutes and if it is successful the end of the output should look like the following:
 ```bash
@@ -444,17 +444,17 @@ Writing lock file
 Generating autoload files
 ```
 
-Once the project is created we can start the Magento installation. We can install Magento either from the command line or using the web Setup Wizard. In this tutorial, we'll install Magento using the command line.
+Once the project is created we can start the installation. We can install Magento either by using the command line or using the web Setup Wizard. In this tutorial, we will install Magento using the command line.
 
-We will use the following options to install the Magento store:
+We will use the following options to install our Magento store:
 
 Base and Base secure URLs are set to https://example.com, change it with your domain.
 Magento administrator:
 John Doe as first and last name.
 john@example.com as email.
-john as username and strong_password as password.
-Database name magentodb, username magento, password strong_password and the database server is on the same host as the web server.
-en_US, US English as a default language.
+john as username and j0hnP4ssvv0rD as a password.
+Database name magento, username magento, password P4ssvv0rD, and the database server is on the same host as the web server.
+en_US, US English as default language.
 USD dollars as default currency.
 America/Chicago as a time zone.
 
@@ -465,15 +465,14 @@ cd ~/public_html
 
 Run the following command to start the installation:
 ```bash
-php bin/magento setup:install --base-url=https://example.com/ --base-url-secure=https://example.com/ --admin-firstname="John" --admin-lastname="Doe" --admin-email="john@example.com" --admin-user="john" --admin-password="strong_password" --db-name="magentodb" --db-host="localhost" --db-user="magento" --currency=USD --timezone=America/Chicago --use-rewrites=1 --db-password="strong_password"
+php bin/magento setup:install --base-url=https://example.com/ --base-url-secure=https://example.com/ --admin-firstname="John" --admin-lastname="Doe" --admin-email="john@example.com" --admin-user="john" --admin-password="j0hnP4ssvv0rD" --db-name="magento" --db-host="localhost" --db-user="magento" --currency=USD --timezone=America/Chicago --use-rewrites=1 --db-password="P4ssvv0rD"
 ```
 
-Don't forget to change the password (strong_password) to something more secure.
-The process may take a few minutes and once completed you will be presented with a message that contains the URI to the Magento admin dashboard.
+If the installation is successful you will be presented with a message that contains the URI to the Magento admin dashboard.
 ```bash
-[Progress: 773 / 773]
+[Progress: 485 / 485]
 [SUCCESS]: Magento installation complete.
-[SUCCESS]: Magento Admin URI: /admin_13nv5k
+[SUCCESS]: Magento Admin URI: /admin_1csalp
 Nothing to import.
 ```
 
@@ -485,27 +484,25 @@ php ~/public_html/bin/magento cron:install
 ```
 Crontab has been generated and saved
 
-Verify that the crontab is installed by typing:
+We can verify that the crontab is installed by running:
 ```bash
 crontab -l
 ```
 ```bash
 #~ MAGENTO START adc062915d7b30804a2b340095af072d
-* * * * * /usr/bin/php7.2 /opt/magento/public_html/bin/magento cron:run 2>&1 | grep -v "Ran jobs by schedule" >> /opt/magento/public_html/var/log/magento.cron.log
-* * * * * /usr/bin/php7.2 /opt/magento/public_html/update/cron.php >> /opt/magento/public_html/var/log/update.cron.log
-* * * * * /usr/bin/php7.2 /opt/magento/public_html/bin/magento setup:cron:run >> /opt/magento/public_html/var/log/setup.cron.log
+* * * * * /usr/bin/php /opt/magento/public_html/bin/magento cron:run 2>&1 | grep -v "Ran jobs by schedule" >> /opt/magento/public_html/var/log/magento.cron.log
+* * * * * /usr/bin/php /opt/magento/public_html/update/cron.php >> /opt/magento/public_html/var/log/update.cron.log
+* * * * * /usr/bin/php /opt/magento/public_html/bin/magento setup:cron:run >> /opt/magento/public_html/var/log/setup.cron.log
 #~ MAGENTO END adc062915d7b30804a2b340095af072d
 ```
 ### Configuring Nginx
-By now, you should already have Nginx with SSL certificate installed on your Ubuntu server.
-We are going to include the default Nginx configuration shipped with Magento.
-Switch over to your sudo user, open your text editor and create the following file:
+Now we only need to create a new server block for our Magento installation. We are going to include the default Nginx configuration shipped with magento:
 ```bash
-sudo nano /etc/nginx/sites-available/example.com
+sudo nano /etc/nginx/conf.d/example.com.conf
 ```
 ```bash
 upstream fastcgi_backend {
-  server   unix:/var/run/php/php7.2-fpm-magento.sock;
+  server   unix:/run/php-fpm/magento.sock;
 }
 
 server {
@@ -524,7 +521,6 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
     ssl_trusted_certificate /etc/letsencrypt/live/example.com/chain.pem;
     include snippets/ssl.conf;
-    include snippets/letsencrypt.conf;
 
     return 301 https://example.com$request_uri;
 }
@@ -537,7 +533,6 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
     ssl_trusted_certificate /etc/letsencrypt/live/example.com/chain.pem;
     include snippets/ssl.conf;
-    include snippets/letsencrypt.conf;
 
     set $MAGE_ROOT /opt/magento/public_html;
     set $MAGE_MODE developer; # or production
@@ -549,20 +544,10 @@ server {
 }
 ```
 Don’t forget to replace example.com with your Magento domain and set the correct path to the SSL certificate files. The snippets used in this configuration are created in this guide.
-Before restarting the Nginx service make a test to be sure that there are no syntax errors:
-```bash
-sudo nginx -t
-```
 
-If there are no errors the output should look like this:
+Reload the Nginx service for changes to take effect:
 ```bash
-nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
-nginx: configuration file /etc/nginx/nginx.conf test is successful
-```
-
-Finally, restart the Nginx service by typing:
-```bash
-sudo systemctl restart nginx
+sudo systemctl reload nginx
 ```
 
 ## Verifying the Installation
@@ -577,10 +562,13 @@ Varnish does not support SSL, so we need to use another service as an SSL Termin
 
 When a visitor opens your website over HTTPS on port 443 the request will be handled by Nginx which works as a proxy and passes the request to Varnish (on port 80). Varnish checks if the request is cached or not. If it is cached, Varnish will return the cached data to Nginx without a request to the Magento application. If the request is not cached Varnish will pass the request to Nginx on port 8080 which will pull data from Magento and Varnish will cache the response.
 
+If a visitor opens your website without SSL on port 80 then he will be redirected to the HTTPS on port 443 URL by Varnish.
+
 ## Configuring Nginx
-We need to edit the Nginx server block which handle SSL/TLS termination and as a back-end for Varnish.
+We need to edit the Nginx server block which we created to handle SSL/TLS termination and as a back-end for Varnish.
+
 ```bash
-sudo nano /etc/nginx/sites-available/example.com
+sudo nano /etc/nginx/conf.d/example.com.conf
 ```
 ```bash
 upstream fastcgi_backend {
@@ -632,7 +620,35 @@ server {
         proxy_set_header X-Forwarded-Port 443;
     }
 }
+```
 
+We also need to remove the default Nginx server block from the nginx.conf file. Comment or delete the following lines:
+```bash
+sudo nano /etc/nginx/nginx.conf
+```
+```bash
+...
+# server {
+#     listen       80 default_server;
+#     listen       [::]:80 default_server;
+#     server_name  _;
+#     root         /usr/share/nginx/html;
+#
+#     # Load configuration files for the default server block.
+#     include /etc/nginx/default.d/*.conf;
+#
+#     location / {
+#     }
+#
+#     error_page 404 /404.html;
+#        location = /40x.html {
+#     }
+#
+#     error_page 500 502 503 504 /50x.html;
+#         location = /50x.html {
+#     }
+# }
+...
 ```
 
 Reload the Nginx service for changes to take effect:
@@ -645,7 +661,7 @@ Varnish is a fast reverse-proxy HTTP accelerator that will sit in front of our w
 
 Install Varnish via yum with the following command:
 ```bash
-sudo apt install varnish -y
+sudo yum install varnish -y
 ```
 
 To configure Magento to use Varnish run:
@@ -659,9 +675,9 @@ sudo php /opt/magento/public_html/bin/magento varnish:vcl:generate > /etc/varnis
 ```
 The command above needs to be run as a root or user with sudo privileges and it will create a file /etc/varnish/default.vcl using the default values which are localhost as back-end host and port 8080 as back-end port.
 
-The default configuration comes with a wrong URL for the health check file. Open the default.vcl file and remove the /pub part from the line highlighted in yellow:
+The default configuration comes with a wrong URL for the health check file. Open the default.vcl file and remove the /pub part from the line
 ```bash
-nano /etc/varnish/default.vcl
+sudo nano /etc/varnish/default.vcl
 ```
 ```bash
 ...
@@ -678,7 +694,7 @@ nano /etc/varnish/default.vcl
 
 By default, Varnish listens on port 6081, and we need to change it to 80:
 ```bash
-nano /etc/varnish/varnish.params
+sudo nano /etc/varnish/varnish.params
 ```
 ```bash
 VARNISH_LISTEN_PORT=80
@@ -690,4 +706,3 @@ sudo systemctl enable varnish
 sudo systemctl start varnish
 ```
 You can use the varnishlog tool to view real-time web requests and for debugging Varnish.
-
