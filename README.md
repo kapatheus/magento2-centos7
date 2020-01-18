@@ -294,12 +294,54 @@ sudo certbot renew --dry-run
 If there are no errors, it means that the test renewal process was successful.
 
 ## Install MariaDB
-MariaDB is an open-source, multi-threaded relational database management system, backward compatible replacement for MySQL. It is maintained and developed by the MariaDB Foundation including some of the original developers of the MySQL.
+MariaDB is an open-source relational database management system, backward compatible, binary drop-in replacement of MySQL. It is developed by some of the original developers of the MySQL and by many people in the community. With the release of CentOS 7, MySQL was replaced with MariaDB as the default database system.
+
+At the time of writing this article, the latest version of MariaDB is version 10.4. If you need to install any other version of MariaDB, head over to the MariaDB repositories page, and generate a repository file for a specific MariaDB version.
+
+To install MariaDB 10.4 on CentOS 7, follow these steps.
+
+The first step is to Enable the MariaDB repository. Create a repository file named MariaDB.repo and add the following content:
 ```bash
-sudo apt -y install mariadb-server mariadb-client
-mysql_secure_installation
+sudo nano /etc/yum.repos.d/MariaDB.repo
 ```
-(Answer yes for all questions)
+```bash
+# MariaDB 10.4 CentOS repository list - created 2020-01-18 11:05 UTC
+# http://downloads.mariadb.org/mariadb/repositories/
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.4/centos7-amd64
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+```
+
+Install the MariaDB server and client packages using yum, same as other CentOS package:
+```bash
+sudo yum install MariaDB-server MariaDB-client
+```
+
+Yum may prompt you to import the MariaDB GPG key:
+```bash
+Retrieving key from https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+Importing GPG key 0x1BB943DB:
+ Userid     : "MariaDB Package Signing Key "
+ Fingerprint: 1993 69e5 404b d5fc 7d2f e43b cbcb 082a 1bb9 43db
+ From       : https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+```
+Type y and hit Enter.
+
+Once the installation is complete, enable MariaDB to start on boot and start the service:
+```bash
+sudo systemctl enable mariadb
+sudo systemctl start mariadb
+```
+
+The last step is to run the mysql_secure_installation script which will perform several security related tasks:
+```bash
+sudo mysql_secure_installation
+```
+The script will prompt you to set up the root user password, remove the anonymous user, restrict root user access to the local machine, and remove the test database.
+
+All steps are explained in detail and it is recommended to answer Y (yes) to all questions.
 
 ### Creating MySQL database and user
 ```bash
