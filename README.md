@@ -344,75 +344,68 @@ The script will prompt you to set up the root user password, remove the anonymou
 All steps are explained in detail and it is recommended to answer Y (yes) to all questions.
 
 ### Creating MySQL database and user
+Login to the MySQL shell:
 ```bash
-sudo mysql
-create database magentodb;
-create user magento@localhost identified by 'strong_password';
-grant all privileges on magentodb.* to magento@localhost identified by 'strong_password';
-flush privileges;
-exit
+mysql -u root -p
 ```
 
-### Creating System User
-Create a new user and group, which will be Magento file system owner , for simplicity we will name the user magento:
+And run the following commands to create a new database and user and grant privileges to that user over the newly created database:
+```bash
+CREATE DATABASE magento;
+GRANT ALL ON magento.* TO magento@localhost IDENTIFIED BY 'P4ssvv0rD';
+```
+
+### Installing and Configuring PHP
+Install all required PHP extensions with the following command:
+```bash
+sudo yum install php-mysql php-opcache php-xml php-mcrypt php-gd php-soap php-redis php-bcmath php-intl php-mbstring php-json php-iconv php-fpm php-zip
+```
+
+Once the installation is complete, set the required and recommended PHP options by editing the php.ini file with sed:
+```bash
+sudo sed -i "s/;cgi.fix_pathinfo=1*/cgi.fix_pathinfo=0/" /etc/php.ini
+sudo sed -i "s/memory_limit = .*/memory_limit = 1024MM/" /etc/php.ini
+sudo sed -i "s/upload_max_filesize = .*/upload_max_filesize = 256M/" /etc/php.ini
+sudo sed -i "s/zlib.output_compression = .*/zlib.output_compression = on/" /etc/php.ini
+sudo sed -i "s/max_execution_time = .*/max_execution_time = 18000/" /etc/php.ini
+sudo sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php.ini
+sudo sed -i "s/;opcache.save_comments.*/opcache.save_comments = 1/" /etc/php.d/10-opcache.ini
+```
+
+### Installing Composer
+Composer is a dependency manager for PHP which is used for installing, updating and managing libraries.
+
+To install composer globally, download the Composer installer with curl and move the file to the /usr/local/bin directory:
+```bash
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+```
+
+### Create a new System User
+Create a new user and group, which will run our Magento installation, for simplicity we will name our user magento:
 ```bash
 sudo useradd -m -U -r -d /opt/magento magento
 ```
 
-Add the www-data user to the magento group and change the /opt/magento directory permissions so that the Nginx can access the Magento installation:
+Add the nginx user to the magento group and change the /opt/magento directory permissions so that the Nginx can access our Magento installation:
 ```bash
-sudo usermod -a -G magento www-data
+sudo usermod -a -G magento nginx
 sudo chmod 750 /opt/magento
 ```
 
-### Installing and Configuring PHP
-PHP 7.2 which is the default PHP version in Ubuntu 18.04 is fully supported and recommended for Magento 2.3. Since we will be using Nginx as a web server we'll also install the PHP-FPM package.
-
-Run the following command to install PHP and all required PHP modules:
-```bash
-sudo apt install php7.2-common php7.2-cli php7.2-fpm php7.2-opcache php7.2-gd php7.2-mysql php7.2-curl php7.2-intl php7.2-xsl php7.2-mbstring php7.2-zip php7.2-bcmath php7.2-soap
-```
-
-PHP-FPM service will automatically start after the installation process is complete, you can verify it by printing the service status:
-```bash
-sudo systemctl status php7.2-fpm
-```
-
-The output should indicate that the fpm service is active and running.
-```bash
-php7.2-fpm.service - The PHP 7.2 FastCGI Process Manager
-Loaded: loaded (/lib/systemd/system/php7.2-fpm.service; enabled; vendor preset: enabled)
-Active: active (running) since Wed 2018-12-12 15:47:16 UTC; 5s ago
-Docs: man:php-fpm7.2(8)
-Main PID: 16814 (php-fpm7.2)
-Status: "Ready to handle connections"
-Tasks: 3 (limit: 505)
-CGroup: /system.slice/php7.2-fpm.service
-```
-
-### Set the required and recommended PHP options by editing the php.ini file with sed::
-```bash
-sudo sed -i "s/;cgi.fix_pathinfo=1*/cgi.fix_pathinfo=0/" /etc/php/7.2/fpm/php.ini
-sudo sed -i "s/memory_limit = .*/memory_limit = 1024M/" /etc/php/7.2/fpm/php.ini
-sudo sed -i "s/upload_max_filesize = .*/upload_max_filesize = 256M/" /etc/php/7.2/fpm/php.ini
-sudo sed -i "s/zlib.output_compression = .*/zlib.output_compression = on/" /etc/php/7.2/fpm/php.ini
-sudo sed -i "s/max_execution_time = .*/max_execution_time = 18000/" /etc/php/7.2/fpm/php.ini
-sudo sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/7.2/fpm/php.ini
-sudo sed -i "s/;opcache.save_comments.*/opcache.save_comments = 1/" /etc/php/7.2/fpm/php.ini
-```
-
-Next we need to create a FPM pool for the magento user.
+### Configure PHP FPM
+Next, we need to configure PHP and create an FPM pool for our magento user.
 Open your text editor and create the following file:
 ```bash
-sudo nano /etc/php/7.2/fpm/pool.d/magento.conf
+sudo nano /etc/php-fpm.d/magento.conf
 ```
 ```bash
 [magento]
 user = magento
-group = www-data
+group = nginx
 listen.owner = magento
-listen.group = www-data
-listen = /var/run/php/php7.2-fpm-magento.sock
+listen.group = nginx
+listen = /run/php-fpm/magento.sock
 pm = ondemand
 pm.max_children =  50
 pm.process_idle_timeout = 10s
@@ -420,44 +413,15 @@ pm.max_requests = 500
 chdir = /
 ```
 
-Restart the PHP-FPM service for changes to take effect:
+Save the file and restart the PHP FPM service for changes to take effect:
 ```bash
-systemctl restart php7.2-fpm
-```
-
-Verify whether the PHP socket was successfully created by running the following ls command:
-```bash
-ls -al /var/run/php/php7.2-fpm-magento.sock
-```
-
-The output should look something like this:
-```bash
-srw-rw---- 1 magento www-data 0 Dec 12 16:07 /var/run/php/php7.2-fpm-magento.sock=
-```
-
-### Installing Composer
-Composer is a dependency manager for PHP and we will be using it to download the Magento core and install all necessary Magento components.
-
-To install composer globally, download the Composer installer with curl and move the file to the /usr/local/bin directory:
-```bash
-curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
-```
-
-Verify the installation by printing the composer version:
-```bash
-composer --version
-```
-
-The output should look something like this:
-```bash
-Composer version 1.8.0 2018-12-03 10:31:16
+sudo systemctl restart php-fpm
 ```
 
 ## Installing Magento
-There are several ways to install Magento 2. Avoid installing Magento from the Github repository because that version is intended for development and not for production installations.
-At the time of writing this article, the latest stable version of Magento is version 2.3.0. In this tutorial, we will install Magento from their repositories using composer.
+Composer is a dependency manager for PHP which is used for installing, updating and managing libraries.
 
-Switch over to the user magento by typing:
+To install composer globally, download the Composer installer with curl and move the file to the /usr/local/bin directory:
 ```bash
 sudo su - magento
 ```
