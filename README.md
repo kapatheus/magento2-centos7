@@ -461,6 +461,8 @@ chdir = /
 
 Save the file and restart the PHP FPM service for changes to take effect:
 ```bash
+systemctl enable php-fpm
+systemctl start php-fpm
 sudo systemctl restart php-fpm
 ```
 
