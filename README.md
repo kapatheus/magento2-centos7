@@ -52,6 +52,11 @@ Now that the Nginx repository is enabled, install the Nginx package with:
 sudo yum install nginx -y
 ```
 
+By default, the repository for stable nginx packages is used. If you would like to use mainline nginx packages, run the following command:
+```bash
+sudo yum-config-manager --enable nginx-mainline
+```
+
 Once it is installed, start and enable the Nginx service by typing:
 ```bash
 sudo systemctl start nginx
