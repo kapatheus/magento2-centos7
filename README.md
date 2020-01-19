@@ -678,6 +678,7 @@ server {
 We also need to remove the default Nginx server block from the nginx.conf file. Comment or delete the following lines:
 ```bash
 sudo nano /etc/nginx/nginx.conf
+sudo nano /etc/nginx/conf.d/default.conf
 ```
 ```bash
 ...
