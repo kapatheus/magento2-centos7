@@ -366,7 +366,7 @@ sudo yum-config-manager --enable remi-php73
 
 Install all required PHP extensions with the following command:
 ```bash
-sudo yum install php php-common php-cli php-curl php-mysqlnd php-mysql php-opcache php-xml php-mcrypt php-gd php-soap php-redis php-bcmath php-intl php-mbstring php-json php-iconv php-fpm php-zip -y
+sudo yum install php php-common php-cli php-curl php-mysql php-opcache php-xml php-mcrypt php-gd php-soap php-redis php-bcmath php-intl php-mbstring php-json php-iconv php-fpm php-zip -y
 ```
 
 Once the installation is complete, set the required and recommended PHP options by editing the php.ini file with sed:
