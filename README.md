@@ -10,9 +10,10 @@ In this tutorial we need these:
 - Logged in as a user account with sudo privileges.
 - A domain name pointing to your public server IP. In this tutorial, we will use example.com.
 
-## Update the system packages and install the unzip utility
+## Update the system packages and install some utilitys
 ```bash
 sudo yum update -y
+sudo yum install yum-utils
 sudo yum install nano -y
 ```
 
@@ -20,6 +21,28 @@ sudo yum install nano -y
 Nginx pronounced “engine x” is a free, open-source, high-performance HTTP and reverse proxy server responsible for handling the load of some of the largest sites on the Internet. Nginx can be used as a standalone web server, and as a reverse proxy for Apache and other web servers. Compared to Apache, Nginx can handle a much large number of concurrent connections and has a smaller memory footprint per connection.
 
 Nginx is not available in the default CentOS 7 repository so we will use the EPEL repositories. To add the EPEL repository to your system, use the following command:
+
+```bash
+sudo nano /etc/yum.repos.d/nginx.repo
+```
+```bash
+[nginx-stable]
+name=nginx stable repo
+baseurl=http://nginx.org/packages/centos/$releasever/$basearch/
+gpgcheck=1
+enabled=1
+gpgkey=https://nginx.org/keys/nginx_signing.key
+module_hotfixes=true
+
+[nginx-mainline]
+name=nginx mainline repo
+baseurl=http://nginx.org/packages/mainline/centos/$releasever/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=https://nginx.org/keys/nginx_signing.key
+module_hotfixes=true
+```
+
 ```bash
 sudo yum install epel-release -y
 ```
