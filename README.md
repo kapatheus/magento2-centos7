@@ -13,6 +13,7 @@ In this tutorial we need these:
 ## Update the system packages and install the unzip utility
 ```bash
 sudo yum update -y
+sudo yum install nano -y
 ```
 
 ## Installing Nginx
