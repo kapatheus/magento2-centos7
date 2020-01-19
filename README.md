@@ -509,6 +509,11 @@ Change to the Magento ~/public_html directory:
 cd ~/public_html
 ```
 
+To install sample data using the command line, enter the following command:
+```bash
+bin/magento sampledata:deploy
+```
+
 Run the following command to start the installation:
 ```bash
 php bin/magento setup:install --base-url=https://example.com/ --base-url-secure=https://example.com/ --admin-firstname="John" --admin-lastname="Doe" --admin-email="john@example.com" --admin-user="john" --admin-password="j0hnP4ssvv0rD" --db-name="magento" --db-host="localhost" --db-user="magento" --currency=USD --timezone=America/Chicago --use-rewrites=1 --db-password="P4ssvv0rD"
