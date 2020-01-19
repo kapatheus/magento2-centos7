@@ -14,7 +14,7 @@ In this tutorial we need these:
 ```bash
 sudo yum update -y
 sudo yum install yum-utils -y
-sudo yum install nano -y
+sudo yum install nano unzip -y
 ```
 
 ## Installing Nginx
