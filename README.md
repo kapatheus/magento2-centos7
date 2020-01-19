@@ -357,6 +357,16 @@ exit
 ```
 
 ### Installing and Configuring PHP
+
+## Enabling Remi repository
+PHP 7.x packages are available in several different repositories. We'll use the Remi repository which provides newer versions of various software packages including PHP.
+
+The Remi repository depends on the EPEL repository. Run the following commands to enable both EPEL and Remi repositories:
+```bash
+sudo yum install epel-release yum-utils -y
+sudo yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
+```
+
 Installing PHP 7.3 Magento 2.3.3 adds support for PHP 7.3.
 
 Start by enabling the PHP 7.3 Remi repository:
