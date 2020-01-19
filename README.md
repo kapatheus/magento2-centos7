@@ -410,7 +410,7 @@ sudo yum install php php-common php-cli php-curl php-mysql php-opcache php-xml p
 Once the installation is complete, set the required and recommended PHP options by editing the php.ini file with sed:
 ```bash
 sudo sed -i "s/;cgi.fix_pathinfo=1*/cgi.fix_pathinfo=0/" /etc/php.ini
-sudo sed -i "s/memory_limit = .*/memory_limit = 1024MM/" /etc/php.ini
+sudo sed -i "s/memory_limit = .*/memory_limit = 2048MM/" /etc/php.ini
 sudo sed -i "s/upload_max_filesize = .*/upload_max_filesize = 256M/" /etc/php.ini
 sudo sed -i "s/zlib.output_compression = .*/zlib.output_compression = on/" /etc/php.ini
 sudo sed -i "s/max_execution_time = .*/max_execution_time = 18000/" /etc/php.ini
