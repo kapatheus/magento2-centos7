@@ -279,7 +279,7 @@ Let's Encrypt's certificates are valid for 90 days. To automatically renew the c
 
 Run the crontab command to create a new cronjob:
 ```bash
-sudo crontab -e
+sudo nano crontab -e
 ```
 ```bash
 0 */12 * * * root test -x /usr/bin/certbot -a \! -d /run/systemd/system && perl -e 'sleep int(rand(3600))' && certbot -q renew --renew-hook "systemctl reload nginx"
@@ -316,7 +316,7 @@ gpgcheck=1
 
 Install the MariaDB server and client packages using yum, same as other CentOS package:
 ```bash
-sudo yum install MariaDB-server MariaDB-client
+sudo yum install MariaDB-server MariaDB-client -y
 ```
 
 Yum may prompt you to import the MariaDB GPG key:
@@ -353,12 +353,20 @@ And run the following commands to create a new database and user and grant privi
 ```bash
 CREATE DATABASE magento;
 GRANT ALL ON magento.* TO magento@localhost IDENTIFIED BY 'P4ssvv0rD';
+exit
 ```
 
 ### Installing and Configuring PHP
+Installing PHP 7.3 Magento 2.3.3 adds support for PHP 7.3.
+
+Start by enabling the PHP 7.3 Remi repository:
+```bash
+sudo yum-config-manager --enable remi-php73
+```
+
 Install all required PHP extensions with the following command:
 ```bash
-sudo yum install php-mysql php-opcache php-xml php-mcrypt php-gd php-soap php-redis php-bcmath php-intl php-mbstring php-json php-iconv php-fpm php-zip
+sudo yum install php php-common php-cli php-curl php-mysqlnd php-mysql php-opcache php-xml php-mcrypt php-gd php-soap php-redis php-bcmath php-intl php-mbstring php-json php-iconv php-fpm php-zip -y
 ```
 
 Once the installation is complete, set the required and recommended PHP options by editing the php.ini file with sed:
