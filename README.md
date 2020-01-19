@@ -13,7 +13,6 @@ In this tutorial we need these:
 ## Update the system packages and install the unzip utility
 ```bash
 sudo yum update -y
-sudo apt install unzip -y
 ```
 
 ## Installing Nginx
@@ -21,12 +20,12 @@ Nginx pronounced “engine x” is a free, open-source, high-performance HTTP an
 
 Nginx is not available in the default CentOS 7 repository so we will use the EPEL repositories. To add the EPEL repository to your system, use the following command:
 ```bash
-sudo yum install epel-release
+sudo yum install epel-release -y
 ```
 
 Now that the EPEL repository is enabled, install the Nginx package with:
 ```bash
-sudo yum install nginx
+sudo yum install nginx -y
 ```
 
 Once it is installed, start and enable the Nginx service by typing:
