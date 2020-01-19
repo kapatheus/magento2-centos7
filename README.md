@@ -713,6 +713,37 @@ sudo systemctl reload nginx
 ### Installing and Configuring Varnish 
 Varnish is a fast reverse-proxy HTTP accelerator that will sit in front of our web server and it will be used as a Full Page Cache solution for our Magento installation.
 
+```bash
+sudo nano /etc/yum.repos.d/varnishcache_varnish60lts.repo
+```
+```bash
+[varnishcache_varnish60lts]
+name=varnishcache_varnish60lts
+baseurl=https://packagecloud.io/varnishcache/varnish60lts/el/7/$basearch
+repo_gpgcheck=1
+gpgcheck=0
+enabled=1
+gpgkey=https://packagecloud.io/varnishcache/varnish60lts/gpgkey
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+metadata_expire=300
+
+[varnishcache_varnish60lts-source]
+name=varnishcache_varnish60lts-source
+baseurl=https://packagecloud.io/varnishcache/varnish60lts/el/7/SRPMS
+repo_gpgcheck=1
+gpgcheck=0
+enabled=1
+gpgkey=https://packagecloud.io/varnishcache/varnish60lts/gpgkey
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+metadata_expire=300
+```
+
+```bash
+sudo yum -q makecache -y --disablerepo='*' --enablerepo='varnishcache_varnish60lts'
+```
+
 Install Varnish via yum with the following command:
 ```bash
 sudo yum install varnish -y
