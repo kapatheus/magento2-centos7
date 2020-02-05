@@ -617,6 +617,13 @@ When a visitor opens your website over HTTPS on port 443 the request will be han
 
 If a visitor opens your website without SSL on port 80 then he will be redirected to the HTTPS on port 443 URL by Varnish.
 
+## Configure Magento
+Magento admin panel, go to Stores > Configuration > General > Web > Base URLs (Secure). From there, change the Offloader header to X-Forwarded-Proto from SSL_OFFLOADED and save the configuration.
+
+From your Magento Admin dashboard click on the STORES link (left sidebar) -> Configuration -> ADVANCED -> System -> Full Page Cache
+
+Unselected Use system value and from the Caching Application list, select Varnish Cache (Recommended), save the configuration, click on the Varnish Configuration link and click on the Export VCL for Varnish 6 button. Donwload file and rename the varnish.vcl file you just exported to default.vcl. Then copy the file to the /etc/varnish/ directory.
+
 ## Configuring Nginx
 We need to edit the Nginx server block which we created to handle SSL/TLS termination and as a back-end for Varnish.
 
@@ -749,16 +756,10 @@ Install Varnish via yum with the following command:
 sudo yum install varnish -y
 ```
 
-To configure Magento to use Varnish run:
+Start and enable Varnish process to start at system boot.
 ```bash
-php /opt/magento/public_html/bin/magento config:set --scope=default --scope-code=0 system/full_page_cache/caching_application 2
+sudo systemctl enable --now varnish
 ```
-
-Next, we need to generate a Varnish configuration file:
-```bash
-sudo php /opt/magento/public_html/bin/magento varnish:vcl:generate > /etc/varnish/default.vcl
-```
-The command above needs to be run as a root or user with sudo privileges and it will create a file /etc/varnish/default.vcl using the default values which are localhost as back-end host and port 8080 as back-end port.
 
 The default configuration comes with a wrong URL for the health check file. Open the default.vcl file and remove the /pub part from the line
 ```bash
@@ -779,15 +780,16 @@ sudo nano /etc/varnish/default.vcl
 
 By default, Varnish listens on port 6081, and we need to change it to 80:
 ```bash
-sudo nano /etc/varnish/varnish.params
+sudo nano /etc/systemd/system/multi-user.target.wants/varnish.service
 ```
 ```bash
-VARNISH_LISTEN_PORT=80
+ExecStart=/usr/sbin/varnishd -a :80 -f /etc/varnish/default.vcl -s malloc,256m
 ```
 
 Once you are done with the modifications, start and enable the Varnish service:
 ```bash
-sudo systemctl enable varnish
-sudo systemctl start varnish
+sudo systemctl daemon-reload
+sudo systemctl restart varnish
+sudo systemctl status  varnish
 ```
 You can use the varnishlog tool to view real-time web requests and for debugging Varnish.
