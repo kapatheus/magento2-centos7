@@ -793,3 +793,6 @@ sudo systemctl restart varnish
 sudo systemctl status  varnish
 ```
 You can use the varnishlog tool to view real-time web requests and for debugging Varnish.
+```bash
+varnishncsa
+```
