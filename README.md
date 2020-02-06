@@ -796,3 +796,33 @@ You can use the varnishlog tool to view real-time web requests and for debugging
 ```bash
 varnishncsa
 ```
+
+# Redis
+Redis cache lets you impart cross-stage, cross-server, or cross-application and makes it an excellent choice for numerous use cases. Its speed, likewise, makes it incredible as a cache layer.
+
+Redis has virtual memory, where once in a while utilized keys would be swapped out to circle so that only the keys needed to fit into the memory are used. Furthermore, the use cases for Redis are those where it’s feasible for the complete information set to fit into the memory.
+
+The essential point of interest in utilizing Redis cache is that store labels are upheld. The moderate-level file system cache is no longer needed to be utilized. Magento Redis cache backend is prescribed in multi-server situations where you have more than one web server.
+
+## Installing Redis
+```bash
+sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+sudo yum --enablerepo=remi install redis -y
+sudo systemctl enable --now redis
+```
+## Configure Magento
+```bash
+cd /opt/magento/public_html
+bin/magento setup:config:set --cache-backend=redis --cache-backend-redis-server=127.0.0.1 --cache-backend-redis-db=0
+bin/magento setup:config:set --session-save=redis --session-save-redis-host=127.0.0.1 --session-save-redis-log-level=3 --session-save-redis-db=0
+```
+## Check config
+```bash
+cd /opt/magento/public_html/app/etc/
+sudo nano env.php
+```
+## Monitor
+```bash
+redis-cli monitor
+```
+
