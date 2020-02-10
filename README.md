@@ -479,6 +479,11 @@ Start the installation by downloading magento files to the /opt/magento/public_h
 composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition /opt/magento/public_html
 ```
 
+If you want a specific version (for example 2.3.3), you can use this command:
+```bash
+composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=2.3.3 /opt/magento/public_html
+```
+
 During the project creation, the composer will ask you to enter the access keys, copy the keys from your Magento marketplace account and store them in the auth.json file, so later when updating your installation you don't have to add the same keys again.
 ```bash
 Authentication required (repo.magento.com):
